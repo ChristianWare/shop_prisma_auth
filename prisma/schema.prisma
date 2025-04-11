@@ -57,13 +57,30 @@ model VerificationToken {
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId  String
-  rating     Int
-  comment    String?
-  approved   Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  orderId    String
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The Shopify product ID or handle (e.g. 'gid://Shopify/Product/123')
+  productId      String
+
+  // Star rating (1-5 typically)
+  rating         Int
+
+  // The user's text review
+  comment        String?
+
+  // If the store admin wants to publicly respond to the user's review
+  adminResponse  String?
+
+  // Whether the review is approved and publicly visible
+  approved       Boolean  @default(false)
+
+  // The order ID if you track which order this review belongs to (optional)
+  // Keep it if you plan to do "review only if purchased" logic
+  orderId        String?
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

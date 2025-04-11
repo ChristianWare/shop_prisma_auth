@@ -3,6 +3,8 @@
 // app/products/[handle]/page.tsx
 import { createStorefrontClient } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton/AddToCartButton";
+import ReviewForm from "@/components/ReviewForm";
+import ReviewsList from "@/components/ReviewsList";
 
 // Next.js automatically provides the route param as `params.handle`
 // because this file is `[handle]/page.tsx`.
@@ -28,6 +30,23 @@ export default async function ProductDetailPage({
   }
 
   const { title, descriptionHtml, images, variants } = product;
+
+  // We'll get the reviews via server-to-server fetch or
+  // use an HTTP fetch to /api/reviews?productId=product.id
+  // For example:
+  const reviewsData = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/reviews?productId=${product.id}`,
+    { cache: "no-store" }
+  ).then((res) => res.json());
+
+  const reviews = reviewsData.reviews || [];
+
+  // Compute average rating
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
+        reviews.length
+      : 0;
 
   return (
     <main className='max-w-6xl mx-auto p-4'>
@@ -77,6 +96,13 @@ export default async function ProductDetailPage({
       )}
 
       <AddToCartButton productVariantId={product.variants[0].id} quantity={1} />
+
+      <p>Average Rating: {averageRating.toFixed(1)} / 5</p>
+      {/* or show star icons representing the average */}
+      <ReviewsList reviews={reviews} />
+
+      {/* The form for user to submit new review */}
+      <ReviewForm productId={product.id} />
     </main>
   );
 }
