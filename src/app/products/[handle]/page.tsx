@@ -27,7 +27,7 @@ export default async function ProductDetailPage({
     );
   }
 
-  const { id, title, descriptionHtml, images, variants } = product;
+  const { title, descriptionHtml, images, variants } = product;
 
   return (
     <main className='max-w-6xl mx-auto p-4'>
@@ -76,7 +76,7 @@ export default async function ProductDetailPage({
         <p className='mb-6'>No variants found.</p>
       )}
 
-      <AddToCartButton productId={id} />
+      <AddToCartButton productVariantId={product.variants[0].id} quantity={1} />
     </main>
   );
 }

@@ -1,30 +1,54 @@
-"use client"; // <— This is crucial
+// src/app/products/[handle]/AddToCartButton.tsx
+"use client";
 
-import React from "react";
+import { useState } from "react";
+import { useCart } from "@/providers/CartProvider";
 
-interface AddToCartButtonProps {
-  productId: string;
-  // any other props you need from the product
+interface Props {
+  productVariantId: string;
+  quantity?: number;
 }
 
-export default function AddToCartButton({ productId }: AddToCartButtonProps) {
-  // You could manage state or call an API route here
-  // to actually add the item to Shopify's cart, etc.
+export default function AddToCartButton({
+  productVariantId,
+  quantity = 1,
+}: Props) {
+  const { addToCart } = useCart();
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
-  const handleAddToCart = () => {
-    alert(`Product ${productId} was added to the cart!`);
-    // More realistic:
-    // - Call an API route: fetch("/api/cart", { method: "POST", body: JSON.stringify({ productId }) })
-    // - Or integrate with Shopify's cart endpoint
-  };
+  async function handleClick() {
+    setStatus("loading");
+    try {
+      // call the context method, not direct fetch
+      await addToCart(productVariantId, quantity);
+      setStatus("success");
+
+      // revert to idle after 2 seconds
+      setTimeout(() => setStatus("idle"), 2000);
+    } catch (error) {
+      console.error("AddToCart error:", error);
+      setStatus("error");
+    }
+  }
 
   return (
-    <button
-      type='button'
-      className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
-      onClick={handleAddToCart}
-    >
-      Add to Cart
-    </button>
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={status === "loading"}
+        className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+      >
+        {status === "loading" ? "Adding..." : "Add to Cart"}
+      </button>
+
+      {status === "success" && (
+        <p className='text-green-600 mt-2'>Added to cart!</p>
+      )}
+      {status === "error" && (
+        <p className='text-red-600 mt-2'>Error adding to cart.</p>
+      )}
+    </div>
   );
 }
