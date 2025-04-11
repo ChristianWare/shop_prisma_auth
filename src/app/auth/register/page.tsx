@@ -8,6 +8,9 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+// -----------------------------
+// Zod Schema for form validation
+// -----------------------------
 const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -22,11 +25,15 @@ const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function Register() {
+// -------------------------------------------
+// The Register Page Component (Client-side)
+// -------------------------------------------
+export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Set up react-hook-form with Zod
   const {
     register,
     handleSubmit,
@@ -35,11 +42,15 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
   });
 
+  // -----------------------------
+  // Handle Form Submission
+  // -----------------------------
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError("");
 
     try {
+      // Call our POST /api/auth/register
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -60,8 +71,9 @@ export default function Register() {
         return;
       }
 
+      // If successful, redirect user to sign in page
       router.push("/auth/signin?registered=true");
-    } catch (error) {
+    } catch (err) {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
     }
@@ -76,6 +88,7 @@ export default function Register() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Name */}
         <div className='mb-4'>
           <label
             className='block text-gray-700 text-sm font-bold mb-2'
@@ -94,6 +107,7 @@ export default function Register() {
           )}
         </div>
 
+        {/* Email */}
         <div className='mb-4'>
           <label
             className='block text-gray-700 text-sm font-bold mb-2'
@@ -112,6 +126,7 @@ export default function Register() {
           )}
         </div>
 
+        {/* Password */}
         <div className='mb-4'>
           <label
             className='block text-gray-700 text-sm font-bold mb-2'
@@ -132,6 +147,7 @@ export default function Register() {
           )}
         </div>
 
+        {/* Confirm Password */}
         <div className='mb-6'>
           <label
             className='block text-gray-700 text-sm font-bold mb-2'
@@ -152,6 +168,7 @@ export default function Register() {
           )}
         </div>
 
+        {/* Submit Button */}
         <button
           type='submit'
           disabled={isLoading}
@@ -161,6 +178,7 @@ export default function Register() {
         </button>
       </form>
 
+      {/* Link to sign in */}
       <div className='mt-6 text-center'>
         <p className='text-gray-600'>
           Already have an account?{" "}
