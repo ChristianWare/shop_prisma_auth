@@ -61,12 +61,26 @@ const config: NextAuthConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // Add role to token if it exists in user
+        token.role = user.role;
+      }
+      // If token doesn't have role, fetch it from database
+      if (token.id && !token.role) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        // Add role to session
+        session.user.role = token.role as string;
       }
       return session;
     },

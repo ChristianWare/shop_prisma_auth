@@ -99,6 +99,11 @@ export default function CartPage() {
         >
           Checkout
         </button>
+        <br />
+        <br />
+        <br />
+        <br />
+        Create an account to track orders and leave reviews
       </div>
     </div>
   );

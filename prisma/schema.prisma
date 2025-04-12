@@ -8,6 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// -------------------------
+// NextAuth + User Models
+// -------------------------
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -35,19 +38,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id                String    @id @default(cuid())
-  name              String?
-  email             String?   @unique
-  emailVerified     DateTime?
-  password          String?
-  image             String?
-  accounts          Account[]
-  sessions          Session[]
-  shopifyCustomerId String?
-  reviews           Review[]
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -56,31 +46,72 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// -------------------------
+// User Model
+// -------------------------
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  password          String?
+  image             String?
+  shopifyCustomerId String?
+  
+  // New role field
+  role              Role      @default(USER)
+  
+  // Relations
+  accounts  Account[]
+  sessions  Session[]
+  reviews   Review[]
+  orders    Order[]
+}
+
+// -------------------------
+// Reviews Model
+// -------------------------
 model Review {
   id             String   @id @default(cuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // The Shopify product ID or handle (e.g. 'gid://Shopify/Product/123')
-  productId      String
-
-  // Star rating (1-5 typically)
-  rating         Int
-
-  // The user's text review
+  productId      String   // e.g. 'gid://Shopify/Product/123'
+  rating         Int      // 1–5
   comment        String?
-
-  // If the store admin wants to publicly respond to the user's review
   adminResponse  String?
-
-  // Whether the review is approved and publicly visible
   approved       Boolean  @default(false)
+  orderId        String?  // Optional: if linking to a local order
 
-  // The order ID if you track which order this review belongs to (optional)
-  // Keep it if you plan to do "review only if purchased" logic
-  orderId        String?
-
-  // Timestamps
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// -------------------------
+// Order Models
+// -------------------------
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id               String   @id @default(cuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  shopifyProductId String   // e.g. 'gid://Shopify/Product/123'
+  quantity         Int      @default(1)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
 }
