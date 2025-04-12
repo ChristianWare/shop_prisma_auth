@@ -18,9 +18,8 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is admin (you might store role in DB instead)
-  //   const isAdmin = session?.user?.email === "admin@yourecommercestore.com";
-  const isAdmin = session?.user?.email === "chris.ware.dev@gmail.com";
+  // Check if user is admin using role instead of email
+  const isAdmin = session?.user?.role === "ADMIN";
 
   useEffect(() => {
     if (isAdmin) {

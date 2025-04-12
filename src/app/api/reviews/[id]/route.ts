@@ -26,10 +26,8 @@ export async function PATCH(
       return NextResponse.json({ message: "Not logged in" }, { status: 401 });
     }
 
-    // 2) Check admin role
-    // For example, we treat "admin@example.com" as an admin
-    // or you might store a `role` in your DB and check that
-    const isAdmin = session.user.email === "admin@example.com";
+    // 2) Check admin role using role instead of email
+    const isAdmin = session.user.role === "ADMIN";
     if (!isAdmin) {
       return NextResponse.json({ message: "Access denied" }, { status: 403 });
     }
@@ -59,5 +57,7 @@ export async function PATCH(
   } catch (error) {
     console.error("PATCH /api/reviews/[id] error:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
