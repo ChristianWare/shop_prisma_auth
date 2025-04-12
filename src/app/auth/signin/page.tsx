@@ -58,7 +58,6 @@ export default function SignIn() {
           Account created successfully! Please sign in.
         </div>
       )}
-
       <button
         onClick={() => signIn("google", { callbackUrl })}
         className='w-full bg-white border border-gray-300 rounded-lg py-2 px-4 mb-4 flex items-center justify-center'
