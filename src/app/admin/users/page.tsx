@@ -76,6 +76,32 @@ export default function AdminUsersPage() {
     }
   };
 
+  const deleteUser = async (userId: string, userName: string) => {
+    // Show browser confirmation dialog
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete ${
+        userName || "this user"
+      }? This action cannot be undone.`
+    );
+
+    if (!isConfirmed) {
+      return; // User canceled the deletion
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete user");
+
+      // Update local state by removing the deleted user
+      setUsers(users.filter((user) => user.id !== userId));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
   if (status === "loading" || loading) {
     return <div className='p-4'>Loading...</div>;
   }
@@ -98,6 +124,7 @@ export default function AdminUsersPage() {
               <th className='py-2 px-4 border'>Email</th>
               <th className='py-2 px-4 border'>Admin Status</th>
               <th className='py-2 px-4 border'>Shopify Customer ID</th>
+              <th className='py-2 px-4 border'>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -131,6 +158,14 @@ export default function AdminUsersPage() {
                 </td>
                 <td className='py-2 px-4 border'>
                   {user.shopifyCustomerId || "-"}
+                </td>
+                <td className='py-2 px-4 border'>
+                  <button
+                    onClick={() => deleteUser(user.id, user.name || "User")}
+                    className='px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded'
+                  >
+                    Delete User
+                  </button>
                 </td>
               </tr>
             ))}

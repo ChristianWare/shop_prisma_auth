@@ -65,3 +65,49 @@ export async function PATCH(
     await prisma.$disconnect();
   }
 }
+
+// Add the DELETE handler
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Check authentication and admin status
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ message: "Not logged in" }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const isAdmin = session.user.role === "ADMIN";
+    if (!isAdmin) {
+      return NextResponse.json({ message: "Access denied" }, { status: 403 });
+    }
+
+    // Get user ID from URL params
+    const userId = params.id;
+
+    // Prevent self-deletion (security measure)
+    if (userId === session.user.id) {
+      return NextResponse.json(
+        { message: "Cannot delete your own account" },
+        { status: 400 }
+      );
+    }
+
+    // Delete the user
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json(
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
