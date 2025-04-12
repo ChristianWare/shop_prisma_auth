@@ -3,6 +3,7 @@
 
 import { auth } from "@/auth"; // NextAuth v5: your src/auth.ts
 import { notFound } from "next/navigation";
+import { shopifyAdminRequest } from "@/lib/shopify";
 
 /**
  * We'll fetch up to 50 orders from Shopify Admin for the logged-in user,
@@ -27,11 +28,12 @@ export default async function AccountOrdersPage() {
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });
-  prisma.$disconnect();
+  await prisma.$disconnect();
 
   if (!user) {
     return notFound();
   }
+
   if (!user.shopifyCustomerId) {
     return (
       <main className='max-w-xl mx-auto p-4'>
@@ -69,51 +71,23 @@ export default async function AccountOrdersPage() {
 /**
  * fetchCustomerOrders(shopifyCustomerId)
  *
- * Uses Shopify Admin REST to get up to 50 orders for this customer.
- * If more than 50, you'd add pagination or switch to GraphQL.
+ * Uses Shopify Admin API to get up to 50 orders for this customer.
  */
 async function fetchCustomerOrders(shopifyCustomerId: string) {
-  // Convert "gid://shopify/Customer/123456" to numeric
-  const numericId = shopifyCustomerId.split("/").pop();
-  const limit = 50;
-  const endpoint = `orders.json?customer_id=${numericId}&limit=${limit}`;
-  const data = await shopifyAdminRequest(endpoint);
-  if (!data?.orders) {
+  try {
+    // Convert "gid://shopify/Customer/123456" to numeric
+    const numericId = shopifyCustomerId.split("/").pop();
+    const endpoint = `orders.json?customer_id=${numericId}&limit=50`;
+
+    const data = await shopifyAdminRequest(endpoint);
+    if (!data?.orders) {
+      return [];
+    }
+    return data.orders;
+  } catch (error) {
+    console.error("Error fetching customer orders:", error);
     return [];
   }
-  return data.orders;
-}
-
-/**
- * A helper function to make requests to Shopify Admin API
- */
-async function shopifyAdminRequest(
-  endpoint: string,
-  method = "GET",
-  body?: any
-) {
-  const domain = process.env.SHOPIFY_STORE_DOMAIN;
-  const adminToken = process.env.SHOPIFY_ADMIN_API_TOKEN;
-  const apiVersion = "2023-04"; // or whichever version you use
-
-  const url = `https://${domain}/admin/api/${apiVersion}/${endpoint}`;
-  const res = await fetch(url, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Access-Token": adminToken || "",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(
-      `Shopify Admin error ${res.status} ${res.statusText} - ${text}`
-    );
-  }
-
-  return res.json();
 }
 
 /**
